@@ -1,28 +1,37 @@
 package teamkhoya.ics414.khoyatraffic;
 
-
-import android.app.NotificationManager;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.location.Address;
+import android.location.Geocoder;
+import android.location.Location;
+import android.location.LocationManager;
 import android.os.Bundle;
+import android.provider.Settings;
 import android.support.v7.app.AppCompatActivity;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.View.OnKeyListener;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
+
+import java.util.List;
+
 
 public class MainActivity extends AppCompatActivity{
-    private NotificationManager notifyMgr = null;
     EditText destText;
     EditText srcText;
     TextView tv;
+    LocationManager locationManager;
+    double destLat, destLong, srcLat, srcLong;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        notifyMgr = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
-
+        locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
         srcText = (EditText) findViewById(R.id.GetSrcAddr);
         destText = (EditText) findViewById(R.id.GetDestAddr);
         destText.setOnKeyListener(new OnKeyListener() {
@@ -31,12 +40,45 @@ public class MainActivity extends AppCompatActivity{
             public boolean onKey(View v, int keyCode, KeyEvent event) {
                 if((event.getAction() == KeyEvent.ACTION_DOWN) && (keyCode == KeyEvent.KEYCODE_ENTER)){
                     //perfom action on keypress
-                    openMap();
+                    checkUserInput(destText, srcText);
                     return true;
                 }
                 return false;
             }
         });
+    }
+
+    /**
+     * checks if input is correct, if not then tells user error
+     */
+
+    public void checkUserInput(EditText destText, EditText srcText){
+        if(destText.getText().toString().equals("")){
+            destText.setError("Enter Destination");
+        }
+        else {
+            if ((getLatitude(destText.getText().toString()) == 0)) {
+                Toast.makeText(MainActivity.this, "Destination is invalid", Toast.LENGTH_LONG).show();
+            }
+            else{
+                destLat = getLatitude(destText.getText().toString());
+                destLong = getLongitude(destText.getText().toString());
+                if(!locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)){
+                    buildAlertMessageNoGps();
+                }
+                else{
+                    if(srcText.getText().toString().equals("")){
+                        srcLat = myLocationLatitude();
+                        srcLong = myLocationLongitude();
+                    }
+                    else{
+                        srcLat = getLatitude(srcText.getText().toString());
+                        srcLong = getLongitude(srcText.getText().toString());
+                    }
+                    openMap();
+                }
+            }
+        }
     }
 
     /**
@@ -52,6 +94,11 @@ public class MainActivity extends AppCompatActivity{
             //input exists
             intent.putExtra("src", srcText.getText().toString());
             intent.putExtra("dest", destText.getText().toString());
+            intent.putExtra("destLat", destLat);
+            intent.putExtra("destLong", destLong);
+            intent.putExtra("srcLat", srcLat);
+            intent.putExtra("srcLong", srcLong);
+
             startActivity(intent);
         }
     }
@@ -64,5 +111,117 @@ public class MainActivity extends AppCompatActivity{
          */
         Intent intent = new Intent(MainActivity.this, FAlertActivity.class);
         startActivity(intent);
+    }
+
+    /*
+        GETS THE LATITUDE OF LOCATION
+         */
+    public double getLatitude(String strAddress) {
+        Geocoder geocoder = new Geocoder(this);
+        List<Address> address;
+        double latitude = 0;
+        try {
+            address = geocoder.getFromLocationName(strAddress, 5);
+            if (address == null) {
+                return 0;
+            }
+            Address location = address.get(0);
+            latitude = location.getLatitude();
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return latitude;
+    }
+
+    /*
+    GETS LONGITUDE OF THE LOCATION
+     */
+    public double getLongitude(String strAddress) {
+        Geocoder geocoder = new Geocoder(this);
+        List<Address> address;
+        double longitude = 0;
+        try {
+            address = geocoder.getFromLocationName(strAddress, 5);
+            if (address == null) {
+                return 0;
+            }
+            Address location = address.get(0);
+            longitude = location.getLongitude();
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return longitude;
+    }
+
+
+    /*
+    IF SOURCE ADDRESS NOT FOUND TRACKS CURRENT LOCATION
+    GETS THE LATITUDE
+     */
+    public double myLocationLatitude() {
+        // Get LocationManager object from System Service LOCATION_SERVICE 
+        // Get Current Location 
+
+        Location myLocation = null;
+        if(!locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)){
+            buildAlertMessageNoGps();
+        }
+        else{
+            try{
+                myLocation = locationManager.getLastKnownLocation(locationManager.GPS_PROVIDER);
+            }
+            catch (SecurityException e){
+                 e.printStackTrace();
+            }
+        }
+
+
+        // Get latitude of the current location  
+        // Get longitude of the current location 
+        //  double longitude = myLocation.getLongitude();  
+        return myLocation.getLatitude();
+    }
+
+    /*
+   IF SOURCE ADDRESS NOT FOUND TRACKS CURRENT LOCATION
+   GETS THE Longitude
+    */
+    public double myLocationLongitude() {
+        // Get LocationManager object from System Service LOCATION_SERVICE 
+        LocationManager locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
+        // Get Current Location
+
+        Location myLocation = null;
+        try{
+            myLocation = locationManager.getLastKnownLocation(locationManager.GPS_PROVIDER);
+        }
+        catch (SecurityException e){
+            e.printStackTrace();
+        }
+        // Get latitude of the current location 
+        // double latitude = myLocation.getLatitude();  
+        // Get longitude of the current location  
+        return myLocation.getLongitude();
+    }
+
+    public double convertMetersToMiles(double kilo){
+        return kilo/1609.344;
+    }
+
+    public void buildAlertMessageNoGps(){
+        final AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setMessage("Your GPS seems to be disabled, do you want to enable it?").setCancelable(false).setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                startActivity(new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS));
+            }
+        }).setNegativeButton("No", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.cancel();
+            }
+        });
+        final AlertDialog alert = builder.create();
+        alert.show();
     }
 }

@@ -1,29 +1,46 @@
 package teamkhoya.ics414.khoyatraffic;
 
-import android.app.NotificationManager;
+import android.content.Intent;
 import android.os.AsyncTask;
-import android.widget.EditText;
+import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.widget.TextView;
 
-import java.net.URLConnection;
-import java.text.DecimalFormat;
-import java.net.URL;
-import java.io.InputStreamReader;
-import java.io.BufferedReader;
-import org.json.JSONObject;
 import org.json.JSONArray;
 import org.json.JSONException;
+import org.json.JSONObject;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.net.URL;
+import java.net.URLConnection;
+import java.text.DecimalFormat;
 
-/**
- * Created by asfagaragan on 11/4/15.
- */
-public class TrafficAsync extends AsyncTask<String, Void, String> {
+public class EtaActivity extends AppCompatActivity {
+    TextView etaText;
+    String url;
     @Override
-    protected String doInBackground(String... params) {
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_eta);
+        etaText = (TextView) findViewById(R.id.eta_display);
+        Intent in = getIntent(); //recalling intent
+        url = in.getExtras().getString("url");
+       // Toast.makeText(EtaActivity.this, url, Toast.LENGTH_LONG).show();
+       TrafficAsync etaTrafficTask = new TrafficAsync();
+        etaTrafficTask.execute(url);
+    }
+
+    public void printSpeed(String speed){
+        TextView tv = (TextView)findViewById(R.id.eta_display);
+        tv.setText(speed);
+    }
+
+    private class TrafficAsync extends AsyncTask<String, Void, String>{
+        @Override
+        protected String doInBackground(String... params) {
         String str_dist="";
         String str_time="";
-
         Long currentTime = System.nanoTime();
         Long estimatedTime = 0L;
         Long waitMS = 60000L; //cycle time
@@ -78,42 +95,44 @@ public class TrafficAsync extends AsyncTask<String, Void, String> {
         //etaDis.setText(printText); need to make EditText or TextView whatever you prefer to print out the information
 
     }
-
-    /**
-     * very simple to understand
-     * it takes the meters from the json file and converts it to miles
-     * @param kilo
-     * @return
-     */
-    public double convertMetersToMiles(double kilo){
-        return kilo/1609.344;
     }
 
-    /**
-     * May need to make a method for converting seconds to hours
-     * takes the seconds from the json file and converts it to hours
-     * @param seconds
-     * @return hours
-     */
-    public double convertSecondsToHours(double seconds) {
-        return seconds/3600;
+        /**
+         * very simple to understand
+         * it takes the meters from the json file and converts it to miles
+         * @param kilo
+         * @return
+         */
+        public double convertMetersToMiles(double kilo){
+            return kilo/1609.344;
+        }
+
+        /**
+         * May need to make a method for converting seconds to hours
+         * takes the seconds from the json file and converts it to hours
+         * @param seconds
+         * @return hours
+         */
+        public double convertSecondsToHours(double seconds) {
+            return seconds/3600;
+        }
+
+        /**
+         * takes the minutes from the json file and converts it to hours
+         * @param minutes
+         * @return hours
+         */
+        public double convertMinutesToHours(double minutes) {
+            return minutes/60;
+        }
+
+        /**
+         * converts minutes to msec
+         * @param minutes
+         * @return
+         */
+        public Long convertMinutesToMilisec(double minutes) {
+            return Double.doubleToLongBits(minutes) * 60000;
+        }
     }
 
-    /**
-     * takes the minutes from the json file and converts it to hours
-     * @param minutes
-     * @return hours
-     */
-    public double convertMinutesToHours(double minutes) {
-        return minutes/60;
-    }
-
-    /**
-     * converts minutes to msec
-     * @param minutes
-     * @return
-     */
-    public Long convertMinutesToMilisec(double minutes) {
-        return Double.doubleToLongBits(minutes) * 60000;
-    }
-}

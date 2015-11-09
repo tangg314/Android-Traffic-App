@@ -1,17 +1,20 @@
 package teamkhoya.ics414.khoyatraffic;
 
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.location.Address;
 import android.location.Criteria;
 import android.location.Geocoder;
-import android.location.LocationManager;
 import android.location.Location;
+import android.location.LocationManager;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
 import android.view.KeyEvent;
 import android.view.View;
-import android.widget.EditText;
 import android.widget.Button;
+import android.widget.EditText;
+import android.provider.Settings;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -30,6 +33,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     String tvSrc;
     EditText dEdit;
     EditText sEdit;
+
+    double destLat, destLong, srcLat, srcLong;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -41,6 +47,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         Intent in = getIntent(); //recalling intent
         tvDest = in.getExtras().getString("dest"); //gets user's destination input through intent
         tvSrc = in.getExtras().getString("src"); //gets user's source input through intent
+        destLat = in.getExtras().getDouble("destLat");
+        destLong = in.getExtras().getDouble("destLong");
+        srcLat = in.getExtras().getDouble("srcLat");
+        srcLong = in.getExtras().getDouble("srcLong");
         dEdit = (EditText)findViewById(R.id.Dest);
         sEdit = (EditText)findViewById(R.id.Src);
         sEdit.setText(tvSrc); //sets user's destination to EditText Box
@@ -71,7 +81,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         startTraffic.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                // DOES SOMETHING STARTS UP NOTIFICATION
+                String url = "https://maps.googleapis.com/maps/api/distancematrix/json?origins=" + srcLat + "," + srcLong + "&destinations=" + destLat + "," + destLong + "&mode=driving";
+                Intent intent = new Intent(MapsActivity.this, EtaActivity.class);
+                intent.putExtra("url", url);
+                startActivity(intent);
             }
         });
 
@@ -188,4 +201,5 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
         return latLng;
     }
+
 }
