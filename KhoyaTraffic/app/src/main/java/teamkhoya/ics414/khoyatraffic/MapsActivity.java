@@ -1,6 +1,9 @@
 package teamkhoya.ics414.khoyatraffic;
 
+import android.app.AlarmManager;
 import android.app.AlertDialog;
+import android.app.PendingIntent;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.location.Address;
@@ -23,10 +26,14 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 
+import java.util.Calendar;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 
 
-public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
+public class MapsActivity extends FragmentActivity implements OnMapReadyCallback{
+
 
     private GoogleMap mMap;
     String tvDest;
@@ -34,7 +41,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     EditText dEdit;
     EditText sEdit;
 
-    double destLat, destLong, srcLat, srcLong;
+    static double destLat;
+    static double destLong;
+    static double srcLat;
+    static double srcLong;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -44,7 +54,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
-        Intent in = getIntent(); //recalling intent
+        final Intent in = getIntent(); //recalling intent
         tvDest = in.getExtras().getString("dest"); //gets user's destination input through intent
         tvSrc = in.getExtras().getString("src"); //gets user's source input through intent
         destLat = in.getExtras().getDouble("destLat");
@@ -81,6 +91,13 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         startTraffic.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                //need to retrieve the following everytime start button is clicked
+//                destLat = MainActivity.getLatitude();
+//                destLong = MainActivity.getLongitude();
+//                srcLat = ;
+//                srcLong = ;
+
+
                 String url = "https://maps.googleapis.com/maps/api/distancematrix/json?origins=" + srcLat + "," + srcLong + "&destinations=" + destLat + "," + destLong + "&mode=driving";
                 Intent intent = new Intent(MapsActivity.this, EtaActivity.class);
                 intent.putExtra("url", url);
@@ -187,8 +204,17 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         // Get the name of the best provider
         String provider = locationManager.getBestProvider(criteria, true);
 
+        Location myLocation = null;
+
         // Get Current Location
-        Location myLocation = locationManager.getLastKnownLocation(provider);
+        try{
+            myLocation = locationManager.getLastKnownLocation(provider);
+        }
+        catch (SecurityException e){
+            e.printStackTrace();
+        }
+
+
 
         // Get latitude of the current location
         double latitude = myLocation.getLatitude();
@@ -201,5 +227,4 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
         return latLng;
     }
-
 }

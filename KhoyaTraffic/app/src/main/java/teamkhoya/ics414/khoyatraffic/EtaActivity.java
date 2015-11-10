@@ -1,9 +1,14 @@
 package teamkhoya.ics414.khoyatraffic;
 
+import android.app.AlarmManager;
+import android.app.PendingIntent;
+import android.content.Context;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.CountDownTimer;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.widget.TextView;
 
 import org.json.JSONArray;
@@ -15,10 +20,21 @@ import java.io.InputStreamReader;
 import java.net.URL;
 import java.net.URLConnection;
 import java.text.DecimalFormat;
+import java.util.Calendar;
 
 public class EtaActivity extends AppCompatActivity {
+    private String TAG = EtaActivity.class.getSimpleName();
     TextView etaText;
     String url;
+
+    //interval variables
+    //milliseconds
+    long interval = 6000;
+    long totalTime = 360000;
+    //output criteria, minimum speed accepted as output
+    //mph
+    double minSpeed = 30;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -27,8 +43,24 @@ public class EtaActivity extends AppCompatActivity {
         Intent in = getIntent(); //recalling intent
         url = in.getExtras().getString("url");
        // Toast.makeText(EtaActivity.this, url, Toast.LENGTH_LONG).show();
-       TrafficAsync etaTrafficTask = new TrafficAsync();
+       final TrafficAsync etaTrafficTask = new TrafficAsync();
         etaTrafficTask.execute(url);
+
+        //repeatedly gets data every interval for totalTime
+        new CountDownTimer(totalTime, interval) {
+            public void onTick(long millisUntilFinished) {
+                        if(etaTrafficTask.getStatus() != AsyncTask.Status.RUNNING){
+                            final TrafficAsync etaTrafficTask2 = new TrafficAsync();
+                            etaTrafficTask2.execute(url);
+                        }
+
+                        else{
+                            etaTrafficTask.cancel(true);
+                        }
+            }
+
+            public void onFinish() {}
+        }.start();
     }
 
     public void printSpeed(String speed){
@@ -41,18 +73,14 @@ public class EtaActivity extends AppCompatActivity {
         protected String doInBackground(String... params) {
         String str_dist="";
         String str_time="";
-        Long currentTime = System.nanoTime();
-        Long estimatedTime = 0L;
-        Long waitMS = 60000L; //cycle time
 
-        do {
             try {
                 URL url = new URL(params[0]);
                 URLConnection uconnect = url.openConnection();
                 BufferedReader bReader = new BufferedReader(new InputStreamReader(uconnect.getInputStream()));
                 String line;
                 StringBuffer sb = new StringBuffer();
-                while ((line = bReader.readLine()) != null) {
+                while((line = bReader.readLine()) != null){
                     sb.append(line);
                 }
 
@@ -68,33 +96,43 @@ public class EtaActivity extends AppCompatActivity {
                 JSONObject time = distance_object.getJSONObject("duration");
                 str_time = time.getString("text"); //duration string in mins
                 //str_time = time.getString("value"); //duration in seconds
-
-                currentTime = System.currentTimeMillis();
-                estimatedTime = currentTime + convertMinutesToMilisec(Long.parseLong(str_time)); //compute eta in msec
-
             } catch (java.io.IOException | JSONException e) {
                 e.printStackTrace();
             }
-            try {
-                wait(waitMS); //cycle
-            } catch (InterruptedException e) {
-                e.printStackTrace();
+            return str_dist + ":" + str_time;
+    }
+
+        @Override
+        protected void onPostExecute(String result){
+            String[] arr = result.split(":");
+            DecimalFormat nfm = new DecimalFormat("#0.00");
+            double miles = convertMetersToMiles(Double.parseDouble(arr[0]));
+
+            //retrieve minutes from data
+            int end = arr[1].indexOf(" mins");
+            Log.d(TAG, "arr[1] = " + arr[1].substring(0, end));
+            double minutes = Double.parseDouble(arr[1].substring(0, end));
+            double hours = convertMinutesToHours(minutes);
+
+             //String printText = "Distance: " + String.valueOf(nfm.format(miles))+ " miles\nduration:" + hours;
+            //etaDis.setText(printText); need to make EditText or TextView whatever you prefer to print out the information
+
+            Log.d(TAG, "miles = " + miles);
+
+            //speed
+            double mph = miles / hours;
+
+            //check whether to output speed
+            if(mph < minSpeed){
+                printSpeed("The speed is not acceptable");
             }
 
-        } while (currentTime < estimatedTime);
-        return str_dist + ":" + str_time;
-    }
+            else{
+                printSpeed("speed: " + mph + " mph" + "\n time: "+ System.nanoTime());
+            }
 
-    @Override
-    protected void onPostExecute(String result){
-        String[] arr = result.split(":");
-        DecimalFormat nfm = new DecimalFormat("#0.00");
-        double miles = convertMetersToMiles(Double.parseDouble(arr[0]));
-        double hours = convertMinutesToHours(Double.parseDouble(arr[1]));
-        String printText = "Distance: " + String.valueOf(nfm.format(miles))+ " miles\nduration: " + hours;
-        //etaDis.setText(printText); need to make EditText or TextView whatever you prefer to print out the information
-
-    }
+            Log.d(TAG, "speed = " + mph + " mph");
+        }
     }
 
         /**
