@@ -20,4 +20,13 @@
         android:layout_alignParentBottom="true"
         android:layout_alignParentRight="true"
         android:layout_alignParentEnd="true" />
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="STOP"
+        android:id="@+id/stop_eta_button"
+        android:layout_alignBottom="@+id/eta_display"
+        android:layout_alignRight="@+id/eta_display"
+        android:layout_alignEnd="@+id/eta_display" />
 </RelativeLayout>

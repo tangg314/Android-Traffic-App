@@ -1,6 +1,7 @@
 package teamkhoya.ics414.khoyatraffic;
 
 import android.app.AlarmManager;
+import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
@@ -9,6 +10,8 @@ import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.view.View;
+import android.widget.Button;
 import android.widget.TextView;
 
 import org.json.JSONArray;
@@ -24,9 +27,12 @@ import java.util.Calendar;
 
 public class EtaActivity extends AppCompatActivity {
     private String TAG = EtaActivity.class.getSimpleName();
+    NotifLight newLight = new NotifLight();
+    private NotificationManager notify = null;
     TextView etaText;
     String url;
-
+    TrafficAsync etaTrafficTask = null;
+    TrafficAsync etaTrafficTask2 = null;
     //interval variables
     //milliseconds
     long interval = 6000;
@@ -39,18 +45,30 @@ public class EtaActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_eta);
+        notify = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
         etaText = (TextView) findViewById(R.id.eta_display);
         Intent in = getIntent(); //recalling intent
         url = in.getExtras().getString("url");
        // Toast.makeText(EtaActivity.this, url, Toast.LENGTH_LONG).show();
-       final TrafficAsync etaTrafficTask = new TrafficAsync();
+        etaTrafficTask = new TrafficAsync();
         etaTrafficTask.execute(url);
+        Button stop_button = (Button) findViewById(R.id.stop_eta_button);
+        stop_button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                etaTrafficTask.cancel(true);
+                etaTrafficTask2.cancel(true);
+                newLight.clearNotification(notify);
+                Intent intent = new Intent(EtaActivity.this, MainActivity.class);
+                startActivity(intent);
+            }
+        });
 
         //repeatedly gets data every interval for totalTime
         new CountDownTimer(totalTime, interval) {
             public void onTick(long millisUntilFinished) {
                         if(etaTrafficTask.getStatus() != AsyncTask.Status.RUNNING){
-                            final TrafficAsync etaTrafficTask2 = new TrafficAsync();
+                            etaTrafficTask2 = new TrafficAsync();
                             etaTrafficTask2.execute(url);
                         }
 
@@ -61,6 +79,7 @@ public class EtaActivity extends AppCompatActivity {
 
             public void onFinish() {}
         }.start();
+
     }
 
     public void printSpeed(String speed){
@@ -125,10 +144,14 @@ public class EtaActivity extends AppCompatActivity {
             //check whether to output speed
             if(mph < minSpeed){
                 printSpeed("The speed is not acceptable");
+                newLight.redNotification(notify);
             }
-
-            else{
+            else if(mph == minSpeed){
+                newLight.yellowNotification(notify);
+            }
+            else if(mph > minSpeed){
                 printSpeed("speed: " + mph + " mph" + "\n time: "+ System.nanoTime());
+                newLight.greenNotification(notify);
             }
 
             Log.d(TAG, "speed = " + mph + " mph");
