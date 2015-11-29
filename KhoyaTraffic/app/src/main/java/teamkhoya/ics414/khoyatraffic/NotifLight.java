@@ -14,16 +14,30 @@ import android.os.Handler;
 
 
 public class NotifLight extends android.app.Activity {
-    int NOTIFICATION_ID = 1;
-    int LED_ON_MS = 100;
-    int LED_OFF_MS = 100;
-    Notification notif=new Notification();
+    static int NOTIFICATION_ID = 1;
+    static int LED_ON_MS = 100;
+    static int LED_OFF_MS = 100;
+    static Notification notif=new Notification();
 
-    public NotifLight(){
+    public NotifLight(){}
 
+    //displays LED light. Color depends on speedInt
+    public static void decideLight(int speedInt, NotificationManager notifMan){
+        clearNotification(notifMan);
+        if(speedInt == 1){
+            redNotification(notifMan);
+        }
+
+        else if(speedInt == 2){
+            yellowNotification(notifMan);
+        }
+
+        else{
+            greenNotification(notifMan);
+        }
     }
 
-    public void redNotification(NotificationManager notifyMgr){
+    public static void redNotification(NotificationManager notifyMgr){
         notif.ledARGB = Color.RED; //color of light
         notif.flags = Notification.FLAG_SHOW_LIGHTS; //shows light
         notif.ledOnMS = LED_ON_MS; //how long the light stays on
@@ -42,7 +56,7 @@ public class NotifLight extends android.app.Activity {
         }, 500);
     }
 
-    public void yellowNotification(NotificationManager notifyMgr){
+    public static void yellowNotification(NotificationManager notifyMgr){
         Notification notif = new Notification();
         notif.ledARGB = Color.YELLOW;
         notif.flags = Notification.FLAG_SHOW_LIGHTS;
@@ -62,7 +76,7 @@ public class NotifLight extends android.app.Activity {
         }, 500);
     }
 
-    public void greenNotification(NotificationManager notifyMgr){
+    public static void greenNotification(NotificationManager notifyMgr){
         Notification notif = new Notification();
         notif.ledARGB = Color.GREEN;
         notif.flags = Notification.FLAG_SHOW_LIGHTS;
@@ -83,7 +97,7 @@ public class NotifLight extends android.app.Activity {
     }
 
 
-    public void clearNotification(NotificationManager notifyMgr) {
+    public static void clearNotification(NotificationManager notifyMgr) {
         //Clear the notification
         notifyMgr.cancel(NOTIFICATION_ID);
     }
