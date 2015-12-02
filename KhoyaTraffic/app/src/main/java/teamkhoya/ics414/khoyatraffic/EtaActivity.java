@@ -68,8 +68,10 @@ public class EtaActivity extends AppCompatActivity {
                     @Override
                     public void onClick(View v) {
                         EtaActivity.this.onStop();
+                        cancel();
                         Intent intent = new Intent(EtaActivity.this, MainActivity.class);
                         startActivity(intent);
+                        finish();
                     }
                 });
 
