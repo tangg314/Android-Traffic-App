@@ -28,6 +28,7 @@ public class FAlertActivity extends Activity {
     String tvDest;
     String tvSrc;
 
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -35,6 +36,7 @@ public class FAlertActivity extends Activity {
         Intent in = getIntent(); //recalling intent
         tvDest = in.getExtras().getString("dest"); //gets user's destination input through intent
         tvSrc = in.getExtras().getString("src"); //gets user's source input through intent
+
         EditText dEdit = (EditText)findViewById(R.id.fa_dest);
         EditText sEdit = (EditText)findViewById(R.id.fa_src);
         sEdit.setText(tvSrc); //sets user's destination to EditText Box

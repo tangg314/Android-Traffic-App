@@ -1,23 +1,19 @@
 package teamkhoya.ics414.khoyatraffic;
 
-import android.app.AlarmManager;
-import android.app.AlertDialog;
-import android.app.PendingIntent;
-import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.location.Address;
 import android.location.Criteria;
 import android.location.Geocoder;
 import android.location.Location;
 import android.location.LocationManager;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
 import android.view.KeyEvent;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
-import android.provider.Settings;
+import android.widget.TextView;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -26,10 +22,16 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 
-import java.util.Calendar;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.net.URL;
+import java.net.URLConnection;
+import java.text.DecimalFormat;
 import java.util.List;
-import java.util.Timer;
-import java.util.TimerTask;
 
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback{
@@ -45,6 +47,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     static double destLong;
     static double srcLat;
     static double srcLong;
+    String url;
+    EtaAsync etaAsync = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -63,11 +67,13 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         srcLong = in.getExtras().getDouble("srcLong");
         dEdit = (EditText)findViewById(R.id.Dest);
         sEdit = (EditText)findViewById(R.id.Src);
+        url = "https://maps.googleapis.com/maps/api/distancematrix/json?origins=" + srcLat + "," + srcLong + "&destinations=" + destLat + "," + destLong + "&mode=driving";
+        etaAsync = new EtaAsync();
+        etaAsync.execute(url);
         sEdit.setText(tvSrc); //sets user's destination to EditText Box
         dEdit.setText(tvDest); //sets user's destination to EditText Box
         Button startTraffic = (Button) findViewById(R.id.btn_start);
-        Button futureAlert = (Button)findViewById(R.id.btn_alert);
-
+        //Button futureAlert = (Button)findViewById(R.id.btn_alert);
         /**
          * RESET DIRECTIONS
          */
@@ -97,17 +103,17 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 //                srcLat = ;
 //                srcLong = ;
 
-
-                String url = "https://maps.googleapis.com/maps/api/distancematrix/json?origins=" + srcLat + "," + srcLong + "&destinations=" + destLat + "," + destLong + "&mode=driving";
+                url = "https://maps.googleapis.com/maps/api/distancematrix/json?origins=" + srcLat + "," + srcLong + "&destinations=" + destLat + "," + destLong + "&mode=driving";
                 Intent intent = new Intent(MapsActivity.this, EtaActivity.class);
                 intent.putExtra("url", url);
+                intent.putExtra("speedType", in.getExtras().getString("speedLevel"));
                 startActivity(intent);
             }
         });
 
         /**
          * FUTURE ALERT FUNCTION HERE
-         */
+
 
         futureAlert.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -119,6 +125,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 startActivity(intent);
             }
         });
+         */
     }
 
     public void resetMap(){
@@ -131,6 +138,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             //input exists
             intent.putExtra("src", sEdit.getText().toString());
             intent.putExtra("dest", dEdit.getText().toString());
+            intent.putExtra("speedType", intent.getExtras().getString("speedLevel"));
             startActivity(intent);
         }
     }
@@ -226,5 +234,63 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         LatLng latLng = new LatLng(latitude, longitude);
 
         return latLng;
+    }
+
+    private class EtaAsync extends AsyncTask<String, Void, String> {
+        @Override
+        protected String doInBackground(String... params) {
+            String str_dist="";
+            String str_time="";
+
+            try {
+                URL url = new URL(params[0]);
+                URLConnection uconnect = url.openConnection();
+                BufferedReader bReader = new BufferedReader(new InputStreamReader(uconnect.getInputStream()));
+                String line;
+                StringBuffer sb = new StringBuffer();
+                while((line = bReader.readLine()) != null){
+                    sb.append(line);
+                }
+
+                JSONObject main = new JSONObject(sb.toString());
+                JSONArray rows_array = new JSONArray(main.getString("rows"));
+                JSONObject elements_object = rows_array.getJSONObject(0);
+                JSONArray elements_array = elements_object.getJSONArray("elements");
+                JSONObject distance_object = elements_array.getJSONObject(0);
+                JSONObject distance = distance_object.getJSONObject("distance");
+                str_dist = distance.getString("value");
+
+                JSONObject time = distance_object.getJSONObject("duration");
+                str_time = time.getString("text");
+            } catch (java.io.IOException | JSONException e) {
+                e.printStackTrace();
+            }
+            return str_dist + ":" + str_time;
+        }
+
+        @Override
+        protected void onPostExecute(String result){
+            String[] arr = result.split(":");
+            DecimalFormat nfm = new DecimalFormat("#0.00");
+            int miles = (int)convertMetersToMiles(Double.parseDouble(arr[0]));
+
+            //retrieve minutes from data
+            int end = arr[1].indexOf(" mins");
+            double minutes = Double.parseDouble(arr[1].substring(0, end));
+            double hours = convertMinutesToHours(minutes);
+
+            double mph = miles / hours;
+            TextView etaMapDisplay = (TextView) findViewById(R.id.eta_map_display);
+            etaMapDisplay.setText("Distance: "+miles+" miles\nDuration: " + arr[1]);
+            etaAsync.cancel(true);
+
+        }
+
+    }
+    public double convertMetersToMiles(double kilo){
+        return kilo/1609.344;
+    }
+    public double convertMinutesToHours(double minutes) {
+        return minutes/60;
     }
 }

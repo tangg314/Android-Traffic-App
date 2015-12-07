@@ -10,13 +10,15 @@ import android.location.LocationManager;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.support.v7.app.AppCompatActivity;
-import android.view.KeyEvent;
 import android.view.View;
-import android.view.View.OnKeyListener;
+import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.EditText;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.util.ArrayList;
 import java.util.List;
 
 
@@ -26,24 +28,29 @@ public class MainActivity extends AppCompatActivity{
     TextView tv;
     LocationManager locationManager;
     double destLat, destLong, srcLat, srcLong;
+    private Spinner spinner;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
+        List <String> list = new ArrayList<String>();
+        list.add("freeway");
+        list.add("highway");
+        list.add("minor highway");
         srcText = (EditText) findViewById(R.id.GetSrcAddr);
         destText = (EditText) findViewById(R.id.GetDestAddr);
-        destText.setOnKeyListener(new OnKeyListener() {
+        spinner = (Spinner) findViewById(R.id.spinner1);
+        ArrayAdapter<String> modeAdapter = new ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, list);
+        modeAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinner.setAdapter(modeAdapter);
+
+        Button nextButton = (Button)findViewById(R.id.go_button);
+        nextButton.setOnClickListener(new View.OnClickListener() {
             @Override
-            //WHEN USER PRESSES ENTER IT GOES TO THE NEXT ACTIVITY
-            public boolean onKey(View v, int keyCode, KeyEvent event) {
-                if((event.getAction() == KeyEvent.ACTION_DOWN) && (keyCode == KeyEvent.KEYCODE_ENTER)){
-                    //perfom action on keypress
-                    checkUserInput(destText, srcText);
-                    return true;
-                }
-                return false;
+            public void onClick(View v) {
+                checkUserInput(destText, srcText);
             }
         });
     }
@@ -92,12 +99,14 @@ public class MainActivity extends AppCompatActivity{
         }
         else{
             //input exists
+            String spinnerString = spinner.getSelectedItem().toString();
             intent.putExtra("src", srcText.getText().toString());
             intent.putExtra("dest", destText.getText().toString());
             intent.putExtra("destLat", destLat);
             intent.putExtra("destLong", destLong);
             intent.putExtra("srcLat", srcLat);
             intent.putExtra("srcLong", srcLong);
+            intent.putExtra("speedLevel", spinnerString);
 
             startActivity(intent);
         }

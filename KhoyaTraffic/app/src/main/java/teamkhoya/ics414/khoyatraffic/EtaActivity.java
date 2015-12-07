@@ -1,10 +1,7 @@
 package teamkhoya.ics414.khoyatraffic;
 
-import android.app.AlarmManager;
 import android.app.NotificationManager;
-import android.app.PendingIntent;
 import android.appwidget.AppWidgetManager;
-import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -27,7 +24,6 @@ import java.io.InputStreamReader;
 import java.net.URL;
 import java.net.URLConnection;
 import java.text.DecimalFormat;
-import java.util.Calendar;
 
 public class EtaActivity extends AppCompatActivity {
     private String TAG = EtaActivity.class.getSimpleName();
@@ -35,15 +31,17 @@ public class EtaActivity extends AppCompatActivity {
     private NotificationManager notify = null;
     TextView etaText;
     String url;
+    String speedType;
     TrafficAsync etaTrafficTask = null;
     TrafficAsync etaTrafficTask2 = null;
+
     //interval variables
     //milliseconds
     long interval = 6000;
     long totalTime = 360000;
     //output criteria, minimum speed accepted as output
     //mph
-    double minSpeed = 20;
+    double minSpeed = 0;
     protected static final String ACTION_ON_CLICK = "android.kwidget.ACTION_ON_CLICK";
 
     @Override
@@ -55,6 +53,19 @@ public class EtaActivity extends AppCompatActivity {
         Intent in = getIntent(); //recalling intent
         url = in.getExtras().getString("url");
         // Toast.makeText(EtaActivity.this, url, Toast.LENGTH_LONG).show();
+        speedType = in.getExtras().getString("speedType");
+        if(speedType.equals("freeway") ){
+            minSpeed = 50;
+        }
+        else if(speedType.equals("highway")){
+            minSpeed = 35;
+        }
+        else if(speedType.equals("minor highway")){
+            minSpeed = 25;
+        }
+        else{
+            minSpeed = 30;
+        }
         etaTrafficTask = new TrafficAsync();
         etaTrafficTask.execute(url);
         final Button stop_button = (Button) findViewById(R.id.stop_eta_button);
@@ -159,6 +170,20 @@ public class EtaActivity extends AppCompatActivity {
 //            int minute = calendar.get(Calendar.MINUTE);
 //            int second = calendar.get(Calendar.SECOND);
             //check whether to output speed
+            if(mph >    (minSpeed - 5)){
+                printSpeed("Speed: " + (int)mph + " mph" + "\nETA: "+ (int)minutes + " min");
+                trafficInt = 3;
+            }
+            else if((minSpeed - 10) < mph && mph <= (minSpeed -5)){
+                printSpeed("Speed: " + (int)mph + " mph" + "\nETA: "+ (int)minutes + " min");
+                trafficInt = 2;
+            }
+            else{
+                printSpeed("The speed is not acceptable");
+                trafficInt = 1;
+            }
+
+            /*
             if(mph < minSpeed){
                 printSpeed("The speed is not acceptable");
                 trafficInt = 1;
@@ -174,7 +199,7 @@ public class EtaActivity extends AppCompatActivity {
                 trafficInt = 3;
                 //newLight.greenNotification(notify);
             }
-
+*/
             //set widget icon and notification light based on speed int
             NotifLight.decideLight(trafficInt, notify);
             decideIcon(trafficInt, EtaActivity.this);
