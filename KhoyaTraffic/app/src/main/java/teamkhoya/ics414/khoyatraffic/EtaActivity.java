@@ -170,7 +170,7 @@ public class EtaActivity extends AppCompatActivity {
 //            int minute = calendar.get(Calendar.MINUTE);
 //            int second = calendar.get(Calendar.SECOND);
             //check whether to output speed
-            if(mph >    (minSpeed - 5)){
+            if(mph > (minSpeed - 5)){
                 printSpeed("Speed: " + (int)mph + " mph" + "\nETA: "+ (int)minutes + " min");
                 trafficInt = 3;
             }

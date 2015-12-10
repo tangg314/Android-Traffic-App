@@ -36,9 +36,10 @@ public class MainActivity extends AppCompatActivity{
         setContentView(R.layout.activity_main);
         locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
         List <String> list = new ArrayList<String>();
-        list.add("freeway");
-        list.add("highway");
-        list.add("minor highway");
+        list.add("Road Type");
+        list.add("Freeway");
+        list.add("Major Road");
+        list.add("Minor Road");
         srcText = (EditText) findViewById(R.id.GetSrcAddr);
         destText = (EditText) findViewById(R.id.GetDestAddr);
         spinner = (Spinner) findViewById(R.id.spinner1);

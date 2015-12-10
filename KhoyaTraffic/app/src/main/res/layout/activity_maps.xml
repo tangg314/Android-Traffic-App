@@ -8,14 +8,14 @@
     <fragment xmlns:map="http://schemas.android.com/apk/res-auto"
         android:id="@+id/map"
         android:layout_width="match_parent"
-        android:layout_height="348dp"
+        android:layout_height="370dp"
         android:layout_weight="1"
         android:scrollbars="vertical"
         class="com.google.android.gms.maps.SupportMapFragment"
         android:layout_gravity="center"
-        android:layout_centerVertical="true"
-        android:layout_alignRight="@+id/Dest"
-        android:layout_alignEnd="@+id/Dest" />
+        android:layout_below="@+id/Dest"
+        android:layout_alignRight="@+id/eta_map_display"
+        android:layout_alignEnd="@+id/eta_map_display" />
 
     <EditText
         android:layout_width="wrap_content"
@@ -25,12 +25,12 @@
         android:id="@+id/Src"
         android:layout_gravity="right|top"
         android:width="250dp"
+        android:hint="Current Location"
         android:layout_alignParentTop="true"
-        android:layout_alignLeft="@+id/Dest"
-        android:layout_alignStart="@+id/Dest"
-        android:layout_alignRight="@+id/Dest"
-        android:layout_alignEnd="@+id/Dest"
-        android:hint="Current Location" />
+        android:layout_alignRight="@+id/btn_start"
+        android:layout_alignEnd="@+id/btn_start"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true" />
 
     <EditText
         android:layout_width="wrap_content"
@@ -39,11 +39,13 @@
         android:ems="10"
         android:id="@+id/Dest"
         android:layout_gravity="right|top"
-        android:layout_above="@+id/map"
-        android:layout_alignParentRight="true"
-        android:layout_alignParentEnd="true"
         android:width="250dp"
-        android:hint="Destination" />
+        android:hint="Destination"
+        android:layout_below="@+id/Src"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:layout_alignRight="@+id/btn_start"
+        android:layout_alignEnd="@+id/btn_start" />
 
     <Button
         android:layout_width="wrap_content"
@@ -51,40 +53,22 @@
         android:text="START"
         android:id="@+id/btn_start"
         android:width="200dp"
-        android:layout_below="@+id/map"
-        android:layout_alignRight="@+id/Dest"
-        android:layout_alignEnd="@+id/Dest"
-        android:layout_alignParentBottom="true" />
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="FROM:"
-        android:id="@+id/textView"
-        android:layout_alignParentTop="true"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true"
-        android:textSize="22dp" />
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="TO:"
-        android:id="@+id/textView2"
-        android:textSize="22dp"
-        android:layout_below="@+id/Src"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true" />
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true" />
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:id="@+id/eta_map_display"
-        android:layout_alignParentBottom="true"
+        android:layout_above="@+id/btn_start"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true"
         android:layout_below="@+id/map"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
-        android:layout_toLeftOf="@+id/btn_start"
-        android:layout_toStartOf="@+id/btn_start" />
+        android:textSize="20dp"
+        android:textColor="#FFFFFF"
+        android:background="#55d1ff" />
 
 </RelativeLayout>
