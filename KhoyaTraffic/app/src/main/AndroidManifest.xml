@@ -35,7 +35,7 @@
         -->
         <meta-data
             android:name="com.google.android.geo.API_KEY"
-            android:value="AIzaSyB_v-T7ZRKwewL_Ou2qvLOtH2LbxKd5mBw" />
+            android:value="AIzaSyByzZTN7jlKAAGlCDjjYJM8hQF03wIQyrM" />
 
         <activity
             android:name=".MapsActivity"
@@ -50,7 +50,7 @@
         <activity android:name=".EtaActivity" >
         </activity>
 
-        <receiver android:name=".kwidget" >
+        <receiver android:name=".kwidget">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
             </intent-filter>
